@@ -135,6 +135,17 @@ export default function Layout({ activeSection, onSectionChange, children }: Lay
         </nav>
 
         {/* Footer — user info + demo role switcher */}
+        {!sidebarOpen && (
+          <div className="p-3 border-t border-gray-100 flex justify-center">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              title="Развернуть меню"
+            >
+              <Icon name="ChevronRight" className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         {sidebarOpen && (
           <div className="p-3 border-t border-gray-100 space-y-2">
             <div

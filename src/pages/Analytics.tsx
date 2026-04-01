@@ -3,15 +3,79 @@ import Icon from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { mockAnalytics, mockEmployees } from "@/lib/mockData";
 
+// Утилита для генерации CSV
+function exportToCSV(rows: string[][], filename: string) {
+  const bom = "\uFEFF"; // BOM для корректного отображения кириллицы в Excel
+  const csv = bom + rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState<"employees" | "modules" | "departments">("employees");
   const data = mockAnalytics;
 
+  const handleExport = () => {
+    if (activeTab === "employees") {
+      const headers = ["Сотрудник", "Должность", "Отдел", "Завершено", "В процессе", "Регламентов", "Ср. балл (%)", "Баллы"];
+      const rows = data.employeeStats.map((emp) => [
+        emp.name,
+        emp.position,
+        emp.department,
+        String(emp.completed),
+        String(emp.in_progress),
+        String(emp.regulations_read),
+        emp.avg_score > 0 ? String(Math.round(emp.avg_score)) : "—",
+        String(emp.total_points),
+      ]);
+      exportToCSV([headers, ...rows], "аналитика_сотрудники.csv");
+    } else if (activeTab === "modules") {
+      const headers = ["Модуль", "Попыток", "Завершений", "Ср. балл (%)", "Завершаемость (%)"];
+      const rows = data.moduleStats.map((mod) => [
+        mod.title,
+        String(mod.total_attempts),
+        String(mod.completions),
+        mod.avg_score > 0 ? String(Math.round(mod.avg_score)) : "—",
+        mod.total_attempts > 0 ? String(Math.round((mod.completions / mod.total_attempts) * 100)) : "0",
+      ]);
+      exportToCSV([headers, ...rows], "аналитика_модули.csv");
+    } else if (activeTab === "departments") {
+      const headers = ["Отдел", "Сотрудников", "Завершено модулей", "Средний балл"];
+      const rows = data.deptStats.map((dept) => [
+        dept.department,
+        String(dept.employee_count),
+        String(dept.completed_modules),
+        String(Math.round(Number(dept.avg_points))),
+      ]);
+      exportToCSV([headers, ...rows], "аналитика_отделы.csv");
+    }
+  };
+
+  const tabLabels: Record<string, string> = {
+    employees: "аналитика_сотрудники",
+    modules: "аналитика_модули",
+    departments: "аналитика_отделы",
+  };
+
   return (
     <div className="p-6 space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Аналитика обучения</h2>
-        <p className="text-sm text-gray-500">Детальная статистика по сотрудникам, модулям и отделам</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Аналитика обучения</h2>
+          <p className="text-sm text-gray-500">Детальная статистика по сотрудникам, модулям и отделам</p>
+        </div>
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <Icon name="Download" className="w-4 h-4" />
+          Экспорт в Excel
+        </button>
       </div>
 
       {/* Summary stats */}

@@ -93,10 +93,11 @@ const plans = [
 ];
 
 const comparisons = [
-  { feature: "Ispring", price: "от 2 700 ₽/пользователь", modules: "Есть", ai: "Нет", bitrix: "Нет" },
-  { feature: "Talenttech LMS", price: "от 1 200 ₽/пользователь", modules: "Есть", ai: "Базовый", bitrix: "Частично" },
-  { feature: "GetCourse", price: "от 4 490 ₽/месяц", modules: "Есть", ai: "Нет", bitrix: "Нет" },
-  { feature: "KnowledgeAI", price: "от 0 ₽/месяц", modules: "Неогр.", ai: "Полный", bitrix: "Встроен", highlight: true },
+  { feature: "iSpring Learn", price: "от 2 700 ₽/пользователь", modules: "Есть", ai: "Нет", bitrix: "Нет", link: null },
+  { feature: "TalentTech LMS", price: "от 1 200 ₽/пользователь", modules: "Есть", ai: "Базовый", bitrix: "Частично", link: null },
+  { feature: "GetCourse", price: "от 4 490 ₽/месяц", modules: "Есть", ai: "Нет", bitrix: "Нет", link: null },
+  { feature: "KDB (IT Solution)", price: "от 990 ₽/месяц", modules: "Есть", ai: "Нет", bitrix: "Встроен", link: "https://yukzashita.bitrix24.ru/market/detail/itsolutionru.kdb/?from=search&text=%D0%B1%D0%B0%D0%B7%D0%B0%20%D0%B7%D0%BD%D0%B0%D0%BD%D0%B8%D0%B9" },
+  { feature: "КнowledgeAI", price: "от 0 ₽/месяц", modules: "Неогр.", ai: "Полный", bitrix: "Встроен", link: null, highlight: true },
 ];
 
 export default function Pricing() {
@@ -205,10 +206,24 @@ export default function Pricing() {
               {comparisons.map((row) => (
                 <tr key={row.feature} className={cn("transition-colors", row.highlight ? "bg-indigo-50" : "hover:bg-gray-50")}>
                   <td className="px-5 py-3.5">
-                    <span className={cn("font-medium", row.highlight ? "text-indigo-700" : "text-gray-900")}>
-                      {row.feature}
-                    </span>
-                    {row.highlight && <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Вы здесь</span>}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={cn("font-medium", row.highlight ? "text-indigo-700" : "text-gray-900")}>
+                        {row.feature}
+                      </span>
+                      {row.highlight && <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Вы здесь</span>}
+                      {row.link && (
+                        <a
+                          href={row.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-indigo-500 hover:text-indigo-700 hover:underline flex items-center gap-0.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Icon name="ExternalLink" className="w-3 h-3" />
+                          маркет
+                        </a>
+                      )}
+                    </div>
                   </td>
                   <td className={cn("px-4 py-3.5 text-center text-xs", row.highlight ? "text-indigo-700 font-bold" : "text-gray-600")}>{row.price}</td>
                   <td className="px-4 py-3.5 text-center">
