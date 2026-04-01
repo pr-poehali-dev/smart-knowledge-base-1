@@ -8,6 +8,7 @@ import Certifications from "@/pages/Certifications";
 import Employees from "@/pages/Employees";
 import Widgets from "@/pages/Widgets";
 import Pricing from "@/pages/Pricing";
+import Branding from "@/pages/Branding";
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -30,6 +31,8 @@ export default function App() {
         return <Widgets />;
       case "pricing":
         return <Pricing />;
+      case "branding":
+        return <Branding />;
       default:
         return <Dashboard onSectionChange={setActiveSection} />;
     }
