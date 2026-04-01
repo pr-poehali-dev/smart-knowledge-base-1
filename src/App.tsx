@@ -9,9 +9,12 @@ import Employees from "@/pages/Employees";
 import Widgets from "@/pages/Widgets";
 import Pricing from "@/pages/Pricing";
 import Branding from "@/pages/Branding";
+import Referral from "@/pages/Referral";
+import GlobalSearch from "@/components/GlobalSearch";
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -33,14 +36,26 @@ export default function App() {
         return <Pricing />;
       case "branding":
         return <Branding />;
+      case "referral":
+        return <Referral />;
       default:
         return <Dashboard onSectionChange={setActiveSection} />;
     }
   };
 
   return (
-    <Layout activeSection={activeSection} onSectionChange={setActiveSection}>
+    <Layout
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      onSearchOpen={() => setSearchOpen(true)}
+    >
       {renderSection()}
+      {searchOpen && (
+        <GlobalSearch
+          onClose={() => setSearchOpen(false)}
+          onNavigate={(section) => { setActiveSection(section); setSearchOpen(false); }}
+        />
+      )}
     </Layout>
   );
 }

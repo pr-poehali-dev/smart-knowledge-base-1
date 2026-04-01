@@ -6,8 +6,9 @@ import type { Regulation } from "@/lib/api";
 import AIRegulationGenerator from "@/components/AIRegulationGenerator";
 import RegulationEditor from "@/components/RegulationEditor";
 import RegulationViewer from "@/components/RegulationViewer";
+import ProcessBoard from "@/components/ProcessBoard";
 
-type View = "list" | "create-ai" | "create-manual" | "edit" | "view";
+type View = "list" | "create-ai" | "create-manual" | "edit" | "view" | "process-board";
 
 export default function Regulations() {
   const [view, setView] = useState<View>("list");
@@ -29,6 +30,12 @@ export default function Regulations() {
 
   if (view === "create-ai") return <AIRegulationGenerator categories={mockCategories} onBack={() => setView("list")} onCreated={handleCreated} />;
   if (view === "create-manual") return <RegulationEditor categories={mockCategories} onBack={() => setView("list")} onSaved={handleCreated} />;
+  if (view === "process-board") return (
+    <ProcessBoard
+      onClose={() => setView("list")}
+      onSave={() => setView("list")}
+    />
+  );
   if (view === "edit" && selected) return (
     <RegulationEditor
       regulation={selected}
@@ -47,6 +54,13 @@ export default function Regulations() {
           <p className="text-sm text-gray-500">{regulations.length} документов</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView("process-board")}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <Icon name="GitBranch" className="w-4 h-4" />
+            Доска процессов
+          </button>
           <button
             onClick={() => setView("create-manual")}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"

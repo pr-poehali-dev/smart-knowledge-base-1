@@ -6,6 +6,7 @@ import { useUser, useIsAdmin, useIsManager, UserRole } from "@/context/UserConte
 interface LayoutProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onSearchOpen?: () => void;
   children: React.ReactNode;
 }
 
@@ -25,6 +26,7 @@ const allNavItems: NavItem[] = [
   { id: "certifications", label: "Аттестация", icon: "Award", roles: ["admin", "manager", "employee"] },
   { id: "employees", label: "Сотрудники", icon: "Users", roles: ["admin", "manager"] },
   { id: "widgets", label: "Виджеты", icon: "Layout", roles: ["admin", "manager", "employee"] },
+  { id: "referral", label: "Реферальная программа", icon: "Gift", roles: ["admin"] },
   { id: "branding", label: "Брендирование", icon: "Palette", roles: ["admin"] },
   { id: "pricing", label: "Тарифы", icon: "CreditCard", roles: ["admin"] },
 ];
@@ -41,7 +43,7 @@ const roleBadgeColors: Record<UserRole, string> = {
   employee: "text-gray-500",
 };
 
-export default function Layout({ activeSection, onSectionChange, children }: LayoutProps) {
+export default function Layout({ activeSection, onSectionChange, onSearchOpen, children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, branding, setUser } = useUser();
   const isAdmin = useIsAdmin();
@@ -72,7 +74,7 @@ export default function Layout({ activeSection, onSectionChange, children }: Lay
           sidebarOpen ? "w-60" : "w-16"
         )}
       >
-        {/* Logo */}
+        {/* Logo + toggle */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -95,9 +97,10 @@ export default function Layout({ activeSection, onSectionChange, children }: Lay
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              "ml-auto p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-              !sidebarOpen && "mx-auto ml-0"
+              "p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+              sidebarOpen ? "ml-auto" : "mx-auto"
             )}
+            title={sidebarOpen ? "Свернуть меню" : "Развернуть меню"}
           >
             <Icon name={sidebarOpen ? "ChevronLeft" : "ChevronRight"} className="w-4 h-4" />
           </button>
@@ -135,17 +138,6 @@ export default function Layout({ activeSection, onSectionChange, children }: Lay
         </nav>
 
         {/* Footer — user info + demo role switcher */}
-        {!sidebarOpen && (
-          <div className="p-3 border-t border-gray-100 flex justify-center">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              title="Развернуть меню"
-            >
-              <Icon name="ChevronRight" className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         {sidebarOpen && (
           <div className="p-3 border-t border-gray-100 space-y-2">
             <div
@@ -201,6 +193,15 @@ export default function Layout({ activeSection, onSectionChange, children }: Lay
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-3">
+            {/* Search button */}
+            <button
+              onClick={onSearchOpen}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <Icon name="Search" className="w-4 h-4" />
+              <span className="hidden sm:inline">Поиск по базе...</span>
+              <kbd className="hidden sm:inline-flex text-xs bg-white text-gray-400 px-1.5 py-0.5 rounded border border-gray-200">⌘K</kbd>
+            </button>
             <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
               <Icon name="Zap" className="w-3 h-3" />
               <span>Демо-режим</span>
