@@ -17,11 +17,11 @@ const plans = [
       { label: "До 5 регламентов", included: true },
       { label: "Базовая аналитика", included: true },
       { label: "ИИ-генерация (3 в месяц)", included: true },
+      { label: "Хранилище видео: нет", included: false },
       { label: "Аттестации", included: false },
       { label: "Расширенная аналитика", included: false },
       { label: "Приоритетная поддержка", included: false },
       { label: "Брендирование", included: false },
-      { label: "API интеграции", included: false },
     ],
   },
   {
@@ -40,10 +40,10 @@ const plans = [
       { label: "Базовая аналитика", included: true },
       { label: "ИИ-генерация (30 в месяц)", included: true },
       { label: "Аттестации (3 активных)", included: true },
+      { label: "Загрузка видео (500 МБ)", included: true },
       { label: "Расширенная аналитика", included: false },
       { label: "Приоритетная поддержка", included: false },
       { label: "Брендирование", included: false },
-      { label: "API интеграции", included: false },
     ],
   },
   {
@@ -62,10 +62,10 @@ const plans = [
       { label: "Полная аналитика по отделам", included: true },
       { label: "ИИ-генерация (неограниченно)", included: true },
       { label: "Неограниченные аттестации", included: true },
+      { label: "Загрузка видео (5 ГБ)", included: true },
       { label: "Расширенная аналитика", included: true },
       { label: "Приоритетная поддержка", included: true },
       { label: "Брендирование платформы", included: false },
-      { label: "API интеграции", included: false },
     ],
   },
   {
@@ -84,7 +84,7 @@ const plans = [
       { label: "Полная аналитика + экспорт", included: true },
       { label: "ИИ-генерация (неограниченно)", included: true },
       { label: "Неограниченные аттестации", included: true },
-      { label: "Расширенная аналитика", included: true },
+      { label: "Загрузка видео (50 ГБ)", included: true },
       { label: "Выделенная поддержка 24/7", included: true },
       { label: "Кастомное брендирование", included: true },
       { label: "API интеграции + вебхуки", included: true },
@@ -170,7 +170,7 @@ export default function Pricing() {
                   ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   : "border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
               )}>
-                {plan.id === "free" ? "Начать бесплатно" : plan.id === "enterprise" ? "Связаться с нами" : "Подключить"}
+                {plan.id === "free" ? "Начать бесплатно" : "Подключить"}
               </button>
             </div>
           </div>

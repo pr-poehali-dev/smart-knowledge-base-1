@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils";
 import { mockEmployees, mockModules, mockRegulations } from "@/lib/mockData";
 import type { Employee } from "@/lib/api";
 
+// Начальные подразделения
+const initialDepartments = ["Продажи", "HR", "IT", "Бухгалтерия", "Маркетинг", "Юридический"];
+
 // Мок данных из Битрикс24 (в реальном приложении — запрос к API Битрикс24)
 const bitrixEmployees = [
   { id: "b1", name: "Иванов Сергей Петрович", position: "Менеджер по продажам", department: "Продажи", email: "ivanov@company.ru", bitrixId: 12 },
@@ -23,8 +26,10 @@ export default function Employees() {
   const [selectedBitrix, setSelectedBitrix] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [importDone, setImportDone] = useState(false);
-
-  const departments = [...new Set(mockEmployees.map((e) => e.department).filter(Boolean))];
+  const [showDeptModal, setShowDeptModal] = useState(false);
+  const [departments, setDepartments] = useState<string[]>(initialDepartments);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [deptError, setDeptError] = useState("");
 
   const filtered = mockEmployees.filter((e) => {
     if (filterDept !== "all" && e.department !== filterDept) return false;
@@ -59,6 +64,20 @@ export default function Employees() {
         setBitrixSearch("");
       }, 1500);
     }, 1800);
+  };
+
+  const handleAddDept = () => {
+    const name = newDeptName.trim();
+    if (!name) { setDeptError("Введите название подразделения"); return; }
+    if (departments.includes(name)) { setDeptError("Такое подразделение уже существует"); return; }
+    setDepartments([...departments, name]);
+    setNewDeptName("");
+    setDeptError("");
+  };
+
+  const handleDeleteDept = (dept: string) => {
+    setDepartments(departments.filter((d) => d !== dept));
+    if (filterDept === dept) setFilterDept("all");
   };
 
   if (selected) {
@@ -160,13 +179,20 @@ export default function Employees() {
   }
 
   return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Сотрудники</h2>
           <p className="text-sm text-gray-500">{mockEmployees.length} сотрудников</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowDeptModal(true)}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Icon name="Building2" className="w-4 h-4" />
+            Подразделения
+          </button>
           <button
             onClick={() => setShowBitrixModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
@@ -174,15 +200,15 @@ export default function Employees() {
             <Icon name="UserPlus" className="w-4 h-4" />
             Добавить из Битрикс24
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
             <Icon name="RefreshCw" className="w-4 h-4" />
-            Синхронизировать
+            <span className="hidden sm:inline">Синхронизировать</span>
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex gap-3">
+      <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row gap-3">
         <div className="relative">
           <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -246,6 +272,83 @@ export default function Employees() {
           );
         })}
       </div>
+
+      {/* Departments Modal */}
+      {showDeptModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+                  <Icon name="Building2" className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Подразделения</h3>
+                  <p className="text-xs text-gray-400">Управление структурой компании</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDeptModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+                <Icon name="X" className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Add new */}
+            <div className="p-4 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Добавить подразделение</p>
+              <div className="flex gap-2">
+                <input
+                  value={newDeptName}
+                  onChange={(e) => { setNewDeptName(e.target.value); setDeptError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddDept()}
+                  placeholder="Название подразделения..."
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={handleAddDept}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                >
+                  <Icon name="Plus" className="w-4 h-4" />
+                </button>
+              </div>
+              {deptError && <p className="text-xs text-red-500 mt-1">{deptError}</p>}
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {departments.map((dept) => {
+                const count = mockEmployees.filter((e) => e.department === dept).length;
+                return (
+                  <div key={dept} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Icon name="Building2" className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{dept}</p>
+                      <p className="text-xs text-gray-400">{count} сотрудников</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteDept(dept)}
+                      className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+                      title="Удалить"
+                    >
+                      <Icon name="Trash2" className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-4 border-t border-gray-100">
+              <button
+                onClick={() => setShowDeptModal(false)}
+                className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bitrix24 Import Modal */}
       {showBitrixModal && (

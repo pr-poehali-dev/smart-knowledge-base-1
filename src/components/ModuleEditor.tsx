@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { Category, Module } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 interface Props {
   module?: Module;
@@ -16,9 +17,22 @@ interface LessonDraft {
   content: string;
   content_type: string;
   video_url: string;
+  video_file?: File | null;
+  video_input_type?: "url" | "file";
 }
 
+// Лимиты хранилища по тарифам (в МБ)
+const planStorageLimits: Record<string, number> = {
+  Free: 0,       // нет загрузки видео
+  Starter: 500,  // 500 МБ
+  Business: 5000, // 5 ГБ
+  Enterprise: 50000, // 50 ГБ
+};
+
 export default function ModuleEditor({ module, categories, onBack, onSaved }: Props) {
+  const { user } = useUser();
+  const storageLimit = planStorageLimits[user.plan] ?? 0;
+  const canUploadVideo = storageLimit > 0;
   const [title, setTitle] = useState(module?.title || "");
   const [description, setDescription] = useState(module?.description || "");
   const [categoryId, setCategoryId] = useState(module?.category_id || "");
@@ -252,12 +266,98 @@ export default function ModuleEditor({ module, categories, onBack, onSaved }: Pr
                     <option value="pdf">PDF документ</option>
                   </select>
                   {lesson.content_type === "video" && (
-                    <input
-                      value={lesson.video_url}
-                      onChange={(e) => setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, video_url: e.target.value } : l))}
-                      placeholder="URL видео (YouTube, Vimeo...)"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+                    <div className="space-y-2">
+                      {/* Toggle: URL or File */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, video_input_type: "url" } : l))}
+                          className={cn(
+                            "flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1",
+                            (!lesson.video_input_type || lesson.video_input_type === "url")
+                              ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                              : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                          )}
+                        >
+                          <Icon name="Link" className="w-3 h-3" />
+                          Ссылка
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!canUploadVideo) return;
+                            setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, video_input_type: "file" } : l));
+                          }}
+                          className={cn(
+                            "flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1 relative",
+                            lesson.video_input_type === "file"
+                              ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                              : canUploadVideo
+                              ? "border-gray-200 text-gray-500 hover:bg-gray-50"
+                              : "border-gray-100 text-gray-300 cursor-not-allowed"
+                          )}
+                          title={!canUploadVideo ? "Загрузка видео доступна с тарифа Стартер и выше" : undefined}
+                        >
+                          <Icon name="Upload" className="w-3 h-3" />
+                          Файл
+                          {!canUploadVideo && (
+                            <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1 rounded">Pro</span>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* URL input */}
+                      {(!lesson.video_input_type || lesson.video_input_type === "url") && (
+                        <input
+                          value={lesson.video_url}
+                          onChange={(e) => setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, video_url: e.target.value } : l))}
+                          placeholder="URL видео (YouTube, Vimeo...)"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      )}
+
+                      {/* File upload */}
+                      {lesson.video_input_type === "file" && canUploadVideo && (
+                        <div>
+                          <label
+                            htmlFor={`video-file-${lesson.id}`}
+                            className={cn(
+                              "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-all",
+                              lesson.video_file
+                                ? "border-emerald-300 bg-emerald-50"
+                                : "border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50"
+                            )}
+                          >
+                            {lesson.video_file ? (
+                              <>
+                                <Icon name="CheckCircle2" className="w-6 h-6 text-emerald-500 mb-1" />
+                                <p className="text-xs font-medium text-emerald-700 text-center px-2 truncate max-w-full">{lesson.video_file.name}</p>
+                                <p className="text-xs text-emerald-500">{(lesson.video_file.size / 1024 / 1024).toFixed(1)} МБ</p>
+                              </>
+                            ) : (
+                              <>
+                                <Icon name="Video" className="w-6 h-6 text-gray-400 mb-1" />
+                                <p className="text-xs text-gray-500">Нажмите для выбора видео</p>
+                                <p className="text-xs text-gray-400">MP4, MOV, AVI • до {storageLimit >= 1000 ? `${storageLimit / 1000} ГБ` : `${storageLimit} МБ`}</p>
+                              </>
+                            )}
+                            <input
+                              id={`video-file-${lesson.id}`}
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, video_file: file } : l));
+                              }}
+                            />
+                          </label>
+                          <p className="text-xs text-gray-400 mt-1 text-right">
+                            Доступно хранилище: {storageLimit >= 1000 ? `${storageLimit / 1000} ГБ` : `${storageLimit} МБ`} (тариф {user.plan})
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
                   {lesson.content_type !== "video" && (
                     <textarea
